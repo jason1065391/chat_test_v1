@@ -9,13 +9,19 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
+        // 创建消息表
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
-            $table->string('user_name');
+            $table->unsignedBigInteger('sender_id');
+            $table->unsignedBigInteger('receiver_id');
             $table->text('message');
             $table->timestamps();
+
+            // 外键约束
+            $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('receiver_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
@@ -24,6 +30,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // 删除消息表
         Schema::dropIfExists('messages');
     }
 };

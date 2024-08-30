@@ -4,31 +4,42 @@ namespace App\Http\Controllers;
 
 use App\Models\Message;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Broadcast;
 use App\Events\MessageSent;
 
 class MessageController extends Controller
 {
-    public function fetchMessages()
+    /**
+     * Fetch messages between the user and the selected user.
+     */
+    public function fetchMessages(Request $request)
     {
-        return Message::orderBy('created_at', 'desc')->get();
+        $userId = $request->query('user_id');
+        $messages = Message::where(function($query) use ($userId) {
+            $query->where('sender_id', $userId)
+                  ->orWhere('receiver_id', $userId);
+        })
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        return response()->json($messages);
     }
 
+    /**
+     * Send a message.
+     */
     public function sendMessage(Request $request)
     {
-        try {
-            $message = Message::create([
-                'user_name' => $request->user_name,
-                'message' => $request->message,
-            ]);
+        $validated = $request->validate([
+            'sender_id' => 'required|exists:users,id',
+            'receiver_id' => 'required|exists:users,id',
+            'message' => 'required|string|max:255',
+        ]);
 
-            // 觸發事件
-            broadcast(new MessageSent($message));
+        $message = Message::create($validated);
 
-            return response()->json($message);
-        } catch (\Exception $e) {
-            // 返回錯誤信息
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        // Broadcast the message to the channel
+        broadcast(new MessageSent($message));
+
+        return response()->json($message);
     }
 }

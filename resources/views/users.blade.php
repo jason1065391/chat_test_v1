@@ -5,11 +5,6 @@
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     @vite('resources/js/chat.js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    @if(auth()->check())
-        <meta name="current-user-id" content="{{ auth()->user()->id }}">
-    @else
-        <meta name="current-user-id" content="0">
-    @endif
     <style>
         /* Basic chat container styling */
         #chat {
@@ -95,4 +90,5 @@
         </div>
     </div>
 </body>
+
 </html>
